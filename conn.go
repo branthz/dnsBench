@@ -49,8 +49,8 @@ func NewClient() (*client, error) {
 		mlog.Error("conn failed:%v", err)
 		return nil, err
 	}
-	conn.SetReadDeadline(time.Unix(3, 0))
-	conn.SetWriteDeadline(time.Unix(2, 0))
+	//conn.SetReadDeadline(time.Now().Add(time.Second*3))
+	//conn.SetWriteDeadline(time.Now().Add(time.Second*3))
 	c.UDPSize = 1024
 	c.conn = conn
 	return c, nil
@@ -76,7 +76,7 @@ func (c *client) Query(d []string) error {
 			}
 		}
 	}
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * waitForClose)
 	c.conn.Close()
 	mlog.Warnln("query finished..............\n")
 	return nil

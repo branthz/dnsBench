@@ -16,7 +16,7 @@ type state struct {
 
 var State *state
 
-const waitForClose = 10
+const waitForClose = 5
 
 func NewState() *state {
 	return &state{}
@@ -28,7 +28,7 @@ func (s *state) Start() {
 
 func (s *state) End() {
 	tm := time.Now().UnixNano()
-	s.runTime = (tm-s.startat)/1e9 - waitForClose +1
+	s.runTime = (tm-s.startat)/1e9 - waitForClose + 1
 }
 
 func (s *state) Show() {
@@ -36,7 +36,7 @@ func (s *state) Show() {
 	fmt.Printf("send requests:			%d\n", s.sendNum)
 	fmt.Printf("receive responses:		%d\n", s.recvNum)
 	fmt.Printf("responses success counts:	%d\n", s.succNum)
-	fmt.Printf("time callapsed:			%d\n", s.runTime)
+	fmt.Printf("time ellapsed:			%d\n", s.runTime)
 	var per int64
 	if s.runTime == 0 {
 		per = int64(s.sendNum)
