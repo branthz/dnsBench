@@ -4,9 +4,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/miekg/dns"
 	"strconv"
 	"strings"
+
+	"github.com/miekg/dns"
 )
 
 const (
@@ -36,30 +37,31 @@ type client struct {
 	TsigSecret   map[string]string // secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 }
 
-func NewClient() (*client,error) {
+func NewClient() (*client, error) {
 	c := new(client)
-	host:=P.server+":"+strconv.Itoa(P.port)
-	dst,err:=net.ResolveUDPAddr("udp4",host)
-	if err!=nil{
-		return nil,err
-	}
-	conn, err := net.DialUDP("udp4", nil,dst)
+	host := P.server + ":" + strconv.Itoa(P.port)
+	dst, err := net.ResolveUDPAddr("udp4", host)
 	if err != nil {
-		mlog.Error("conn failed:%v",err)
-		return nil,err
+		return nil, err
 	}
-
+	conn, err := net.DialUDP("udp4", nil, dst)
+	if err != nil {
+		mlog.Error("conn failed:%v", err)
+		return nil, err
+	}
+	conn.SetReadDeadline(time.Unix(3, 0))
+	conn.SetWriteDeadline(time.Unix(2, 0))
 	c.UDPSize = 1024
 	c.conn = conn
-	return c,nil
+	return c, nil
 }
 
 func (c *client) Query(d []string) error {
 	var dl = len(d)
 	var data []byte
 	var err error
-	mlog.Debug("remote addr:%s",c.conn.RemoteAddr().String())
-	for j:=0;j<P.recycle;j++ {
+	mlog.Debug("remote addr:%s", c.conn.RemoteAddr().String())
+	for j := 0; j < P.recycle; j++ {
 		for i := 0; i < dl; i++ {
 			State.sendNum++
 			m := NewMsg(d[i])
@@ -74,7 +76,7 @@ func (c *client) Query(d []string) error {
 			}
 		}
 	}
-	time.Sleep(time.Second*10)
+	time.Sleep(time.Second * 10)
 	c.conn.Close()
 	mlog.Warnln("query finished..............\n")
 	return nil
@@ -87,7 +89,7 @@ func (c *client) Response() {
 	for {
 		rn, err = c.conn.Read(data)
 		if err != nil {
-			if 	strings.Contains(err.Error(),"closed") {
+			if strings.Contains(err.Error(), "closed") {
 				mlog.Warnln("connection closed!")
 				break
 			}
@@ -101,14 +103,14 @@ func (c *client) Response() {
 		if err != nil {
 			mlog.Error("parse respon failed:%v", err)
 			continue
-		}else {
+		} else {
 			mlog.Debug("get reponse:%v", m)
 		}
-		if m.Rcode==dns.RcodeSuccess{
+		if m.Rcode == dns.RcodeSuccess {
 			State.succNum++
-		}else{
+		} else {
 			//mlog.Warn("%v\n",m)
-			mlog.Warn(" *** invalid answer name after MX query for %s\n",m.Question[0].Name)
+			mlog.Warn(" *** invalid answer name after MX query for %s\n", m.Question[0].Name)
 		}
 	}
 	return

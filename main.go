@@ -1,27 +1,16 @@
 package main
 
-import (
-	"flag"
-	"os"
-)
-
-func main(){
-	if len(os.Args)<2 {
-		flag.PrintDefaults()
-		return
-	}
-	flag.Parse()
-
+func main() {
 	var err error
-	domainSet,err=readFile(P.filePath)
-	if err!=nil||len(domainSet)==0{
+	domainSet, err = readFile(P.filePath)
+	if err != nil || len(domainSet) == 0 {
 		mlog.Errorln(err)
 		return
 	}
-	mlog.Debug("%+v\n",domainSet[0])
+	mlog.Debug("%+v\n", domainSet[0])
 
-	Client,err:=NewClient()
-	if err !=nil{
+	Client, err := NewClient()
+	if err != nil {
 		mlog.Errorln(err)
 		return
 	}
