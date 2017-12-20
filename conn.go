@@ -104,43 +104,13 @@ func (c *client) Response() {
 			mlog.Error("parse respon failed:%v", err)
 			continue
 		} else {
-			mlog.Debug("get reponse:%v", m)
+			mlog.Debug("get reponse:\n%v", m)
 		}
 		if m.Rcode == dns.RcodeSuccess {
 			State.succNum++
 		} else {
-			//mlog.Warn("%v\n",m)
 			mlog.Warn(" *** invalid answer name after MX query for %s\n", m.Question[0].Name)
 		}
 	}
 	return
 }
-
-/*
-func (c *Client)query(m *dns.Msg) error{
-	var data []byte
-
-	opt := m.IsEdns0()
-	// If EDNS0 is used use that for size.
-	if opt != nil && opt.UDPSize() >= MinMsgSize {
-		c.UDPSize = opt.UDPSize()
-	}
-	// Otherwise use the client's configured UDP size.
-
-	// write with the appropriate write timeout
-	if err = c.WriteMsg(m); err != nil {
-		return nil, 0, err
-	}
-
-	co.SetReadDeadline(time.Now().Add(c.getTimeoutForRequest(c.readTimeout())))
-	r, err = co.ReadMsg()
-	if err == nil && r.Id != m.Id {
-		err = ErrId
-	}
-
-	conn.Write(data)
-
-	return nil
-}
-
-*/

@@ -1,16 +1,18 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/branthz/utarrow/lib/log"
+	"github.com/urfave/cli"
 
 	"github.com/miekg/dns"
 )
 
+var app *cli.App
 var domainSet []string
+
 var P *params
 var mlog *log.Logger
 
@@ -27,16 +29,6 @@ type params struct {
 func NewParams() *params {
 	p := new(params)
 	return p
-}
-
-func (p *params) Parse() {
-	flag.StringVar(&P.server, "s", "127.0.0.1", "serverAddress")
-	flag.IntVar(&P.port, "p", 53, "server port")
-	flag.StringVar(&P.filePath, "path", "./domains", "file path for domain sets")
-	flag.IntVar(&P.recycle, "n", 1, "run through domains N times")
-	//flag.IntVar(&P.clientsNum, "c", 1, "client counts")
-	flag.StringVar(&P.tp, "t", "A", "dns type,support A/CNAME")
-	return
 }
 
 func (p *params) CheckInput() error {
@@ -56,24 +48,68 @@ func Initdnstps() {
 
 func init() {
 	P = NewParams()
-	P.Parse()
-	if len(os.Args) < 2 {
-		flag.PrintDefaults()
+	app = cli.NewApp()
+	app.Author = "brant"
+	app.Name = "dnsBench"
+	app.Version = "0.0.2"
+	app.Description = "an dns server stree test tool"
+	app.HideHelp = true
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "s",
+			Value:       "8.8.8.8",
+			Usage:       "dns server address",
+			Destination: &P.server,
+		},
+		cli.IntFlag{
+			Name:        "p",
+			Value:       53,
+			Usage:       "server port",
+			Destination: &P.port,
+		},
+		cli.StringFlag{
+			Name:        "path",
+			Value:       "./domains",
+			Usage:       "file path of  domain sets",
+			Destination: &P.filePath,
+		},
+		cli.StringFlag{
+			Name:        "t",
+			Value:       "A",
+			Usage:       "msg type:(A,CNAME)",
+			Destination: &P.tp,
+		},
+		cli.IntFlag{
+			Name:        "n",
+			Value:       1,
+			Usage:       "run through domains N times",
+			Destination: &P.recycle,
+		},
+	}
+	var err error
+	if err = app.Run(os.Args); err != nil {
 		os.Exit(-1)
 	}
-	flag.Parse()
+
 	Initdnstps()
 
-	var err error
 	if err = P.CheckInput(); err != nil {
 		fmt.Printf("input params not fit:%v\n", err)
 		os.Exit(-1)
 	}
 
-	mlog, err = log.New("", "ERROR")
+	mlog, err = log.New("", log.Error)
 	if err != nil {
 		os.Exit(-1)
 	}
 	mlog.Infoln("dnsBench start ...")
 	State = NewState()
+
+	domainSet, err = readFile(P.filePath)
+	if err != nil || len(domainSet) == 0 {
+		mlog.Errorln(err)
+		os.Exit(-1)
+	}
+	mlog.Debug("%+v\n", domainSet[0])
 }
