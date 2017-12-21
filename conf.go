@@ -87,6 +87,10 @@ func init() {
 			Destination: &P.recycle,
 		},
 	}
+	app.Action = func(c *cli.Context) error {
+		fmt.Printf("app run on version:%s\n", app.Version)
+		return nil
+	}
 	var err error
 	if err = app.Run(os.Args); err != nil {
 		os.Exit(-1)
